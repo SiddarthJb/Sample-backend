@@ -31,7 +31,13 @@
         public string ContainerName { get; set; } = null!;
         public string StorageAccountName { get; set; } = null!;
         public string StorageAccountKey { get; set; } = null!;
+    }
 
+    public class GeneralSettings
+    {
+        public const string Key = "General";
+        public double MatchQueueTimeOut { get; set; }
+        public int FreePerDayMatchLimit { get; set; }
     }
 
 }

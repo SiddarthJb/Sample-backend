@@ -196,11 +196,17 @@ namespace Z1.Profiles
                 throw new NotFoundException("MatchId not found");
             }
 
-            var profile = match.User1Id == user.Id ? match.User2.Profile : match.User1.Profile;
+            var matchUserId = match.User1Id == user.Id ? match.User2Id : match.User1Id;
+
+            var profile = _context.Profiles
+                            .Include(x => x.Languages)
+                            .Include(x => x.Interests)
+                            .Include(x => x.Images)
+                            .First(x => x.UserId == matchUserId);
 
             var partialProfile = new PartialChatProfileDto()
             {
-                ImageUrl = profile.Images.First().ImageUrl,
+                ImageUrl = _blobService.GenerateSasToken(profile.Images.First().ImageUrl),
                 Age = profile.Age,
                 Height = profile.Height,
                 Gender = ((Gender)profile.Gender).ToString(),
@@ -211,6 +217,8 @@ namespace Z1.Profiles
                 Smoke = ((Smoke)profile.Smoke).ToString(),
                 Religion = ((Religion)profile.Religion).ToString(),
                 Profession = ((Profession)profile.Profession).ToString(),
+                Languages = profile.Languages.Select(x => x.Language).ToList(),
+                Interests = profile.Interests.Select(x => x.Interest).ToList(),
             };
 
             var response = new BaseResponse<PartialChatProfileDto>();
@@ -355,8 +363,8 @@ namespace Z1.Profiles
         public async Task<BaseResponse<bool>> DeleteImageAsync(string fileId, User user)
         {
             var response = new BaseResponse<bool>();
-            var profile = await _context.Profiles.FirstOrDefaultAsync(x => x.User == user);
-            if (profile == null)
+            var profile = await _context.Profiles.FirstOrDefaultAsync(x => x.UserId == user.Id);
+            if (profile != null)
             {
                 var image = await _context.Images.FirstOrDefaultAsync(x => x.ImageUrl == fileId && x.ProfileId == profile.Id);
                 image.IsActive = false;
@@ -367,5 +375,31 @@ namespace Z1.Profiles
             response.Data = false;
             return response;
         }
+
+        public async Task<BaseResponse<bool>> UpdateImageOrder(List<int> newOrder, User user)
+        {
+            var response = new BaseResponse<bool>();
+            var profile = await _context.Profiles.FirstOrDefaultAsync(x => x.UserId == user.Id);
+            var images = _context.Images.Where(x => x.ProfileId == profile.Id && x.IsActive)
+                .OrderBy(x => x.Order).ToList();
+            
+            if (images != null && images.Count() > 0 )
+            {
+                foreach (var order in newOrder.Select((value, i) => new { i, value }))
+                {
+                    if(images.ElementAtOrDefault(order.i) != null)
+                    {
+                        images[order.i].Order = order.value;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                response.Data = true;
+                return response;
+            }
+            response.Data = false;
+            return response;
+        }
+
     }
 }

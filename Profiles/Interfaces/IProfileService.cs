@@ -16,5 +16,6 @@ namespace Z1.Profiles.Interfaces
         Task<BaseResponse<bool>> UpdateProfile(UpdateProfileRequestDto document, User user);
         Task<BaseResponse<ProfileDto>> GetProfileAsync(int userId, User user);
         Task<BaseResponse<bool>> DeleteImageAsync(string fileId, User user);
+        Task<BaseResponse<bool>> UpdateImageOrder(List<int> newOrder, User user);
     }
 }

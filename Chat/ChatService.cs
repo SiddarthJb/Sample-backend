@@ -43,7 +43,8 @@ namespace Z1.Chat
         public async Task<BaseResponse<List<ChatListItem>>> GetAllChats(User user)
         {
             var matches = _context.Matches
-                 .Where(x => (x.User1Id == user.Id || x.User2Id == user.Id) && x.IsPartial == false && x.IsActive == true)
+                 .Where(x => (x.User1Id == user.Id || x.User2Id == user.Id) 
+                 && x.IsActive == true)
                  .Include(x => x.Messages).ToList();
 
             var result = new List<ChatListItem>();
@@ -66,6 +67,8 @@ namespace Z1.Chat
                 chatListItem.Username = profile.Name;
                 chatListItem.MatchedUserId = profile.UserId;
                 chatListItem.MatchId = match.Id;
+                chatListItem.CreatedAt = match.CreatedAt;
+                chatListItem.IsPartial = match.IsPartial;
                 chatListItem.Messages = await _context.Messages.Select(x => new MessageDto
                 {
                     Id = x.Id,
@@ -101,7 +104,7 @@ namespace Z1.Chat
         public BaseResponse<List<ChatListItem>> GetChatList(User user)
         {
             var matches = _context.Matches
-                 .Where(x => (x.User1Id == user.Id || x.User2Id == user.Id) && x.IsPartial == false && x.IsActive == true)
+                 .Where(x => (x.User1Id == user.Id || x.User2Id == user.Id) && x.IsActive == true)
                  .Include(x => x.Messages).ToList();
 
 
@@ -150,7 +153,7 @@ namespace Z1.Chat
 
             var currentMatch = _context.Matches.Include(x => x.Messages)
                 .FirstOrDefault(x => (x.User1Id == user.Id || x.User2Id == user.Id)
-                                && x.IsPartial && x.IsActive && x.CreatedAt.AddDays(1) > DateTime.Now);
+                                && x.IsPartial && x.IsActive && x.CreatedAt.AddDays(1) > DateTime.UtcNow);
 
             var response = new BaseResponse<ChatListItem>();
 

@@ -9,7 +9,6 @@ using Z1.Core.Configurations;
 using Z1.Core.Data;
 using Z1.Match;
 using Z1.Profiles;
-using Microsoft.Extensions.Azure;
 using Z1.Core.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -69,22 +68,16 @@ builder.Services.AddProblemDetails();
 builder.Services.AddSignalR();
 builder.Services.AddHostedService<Matcher>();
 builder.Services.AddSingleton<IBlobService, AzureStorage>();
-//builder.Services.AddAzureClients(clientBuilder =>
-//{
-//    clientBuilder.AddBlobServiceClient(builder.Configuration["localStorage:blob"]!, preferMsi: true);
-//    clientBuilder.AddQueueServiceClient(builder.Configuration["localStorage:queue"]!, preferMsi: true);
-//});
-
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+//}
 
 app.UseHttpsRedirection();
 app.UseExceptionHandler();

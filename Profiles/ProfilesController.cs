@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Z1.Auth.Models;
 using Z1.Core;
 using Z1.Profiles.Dtos;
@@ -71,7 +70,7 @@ namespace Z1.Auth.Controllers
             return Ok();
         }
 
-        [HttpGet("get-partial-chat-profile")]
+        [HttpGet("get-partial-chat-profile/{matchId}")]
         public async Task<IActionResult> GetPartialChatProfileAsync(int matchId)
         {
             var user = (User)HttpContext.Items["User"];
@@ -97,6 +96,13 @@ namespace Z1.Auth.Controllers
         {
             var user = (User)HttpContext.Items["User"];
             return Ok(await _profileService.DeleteImageAsync(fileId, user));
+        }
+
+        [HttpPost("update-image-order/")]
+        public async Task<IActionResult> UpdateImageOrder(UpdateImageOrderDto request)
+        {
+            var user = (User)HttpContext.Items["User"];
+            return Ok(await _profileService.UpdateImageOrder(request.NewOrder, user));
         }
 
         // helper methods

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using Z1.Auth.Models;
@@ -9,6 +10,7 @@ using Z1.Core.Interfaces;
 using Z1.Match.Dtos;
 using Z1.Match.Interfaces;
 using Z1.Match.Models;
+using static Z1.MatchHub;
 
 namespace Z1.Match
 {
@@ -17,12 +19,14 @@ namespace Z1.Match
         private readonly AppDbContext _context;
         private readonly IHubContext<MatchHub> _hubContext;
         private readonly IBlobService _blobService;
+        private readonly GeneralSettings _generalSettings;
 
 
-        public MatchService(AppDbContext dbContext, IHubContext<MatchHub> hubContext, IBlobService blobService) {
+        public MatchService(AppDbContext dbContext, IHubContext<MatchHub> hubContext, IBlobService blobService, IOptions<GeneralSettings> generalSettings) {
             _context = dbContext;
             _hubContext = hubContext;
             _blobService = blobService;
+            _generalSettings = generalSettings.Value;
         }
 
         public async Task<BaseResponse<FiltersDto>> GetFilters(User user)
@@ -306,13 +310,19 @@ namespace Z1.Match
             var notMatched = true;
 
             var timeNow = DateTime.UtcNow;
-            var noMatchUsers = _context.MatchQueue.Where(user => user.RequestTime.AddMinutes(5) < timeNow && user.Tries > 0);
+            var noMatchUsers = _context.MatchQueue.Where(user => user.RequestTime.AddMinutes(_generalSettings.MatchQueueTimeOut) < timeNow && user.Tries > 0);
 
+            // remove if search time limit is reached in queue.
             if (noMatchUsers.Count() > 0)
             {
                 foreach (var noMatchUser in noMatchUsers)
                 {
-                    await _hubContext.Clients.User(noMatchUser.Id.ToString()).SendAsync("MatchNotFound", noMatchUser.Id.ToString());
+                    var matchRes = new MatchResponse()
+                    {
+                        Status = "NotFound",
+                    };
+
+                    await _hubContext.Clients.User(noMatchUser.Id.ToString()).SendAsync("Matcher", matchRes);
                     _context.MatchQueue.Remove(noMatchUser);
                     _context.SaveChanges();
                 }
@@ -320,13 +330,19 @@ namespace Z1.Match
 
             var allUsers = await _context.MatchQueue.ToListAsync();
 
+            //Remove if only one person in queue.
             if (allUsers.Count < 2)
             {
-                noMatchUsers = _context.MatchQueue.Where(user => user.RequestTime.AddMinutes(5) < timeNow);
+                noMatchUsers = _context.MatchQueue.Where(user => user.RequestTime.AddMinutes(_generalSettings.MatchQueueTimeOut) < timeNow);
 
                 if (noMatchUsers.Count() > 0)
                 {
-                    await _hubContext.Clients.User(noMatchUsers.First().Id.ToString()).SendAsync("MatchNotFound", noMatchUsers.First().Id.ToString());
+                    var matchRes = new MatchResponse()
+                    {
+                        Status = "NotFound",
+                    };
+
+                    await _hubContext.Clients.User(noMatchUsers.First().Id.ToString()).SendAsync("Matcher", matchRes);
                     _context.MatchQueue.Remove(noMatchUsers.First());
                     _context.SaveChanges();
                 }
@@ -530,8 +546,13 @@ namespace Z1.Match
                         _context.MatchQueue.Remove(matchUser.Value);
                         await _context.SaveChangesAsync();
 
-                        await _hubContext.Clients.User(user.UserId.ToString()).SendAsync("MatchFound", matchUser.Value.UserId.ToString(), match.Id);
-                        await _hubContext.Clients.User(matchUser.Value.UserId.ToString()).SendAsync("MatchFound", user.UserId.ToString(), match.Id);
+                        var matchRes = new MatchResponse()
+                        {
+                            Status = "MatchFound",
+                        };
+
+                        await _hubContext.Clients.User(user.UserId.ToString()).SendAsync("Matcher", matchRes);
+                        await _hubContext.Clients.User(matchUser.Value.UserId.ToString()).SendAsync("Matcher", matchRes);
 
                         return true;
                     }
@@ -565,17 +586,22 @@ namespace Z1.Match
                 {
                     if (currentMatch.User2Liked == true)
                     {
+                        var matchRes = new MatchResponse()
+                        {
+                            Status = "Match",
+                        };
+
                         currentMatch.IsPartial = false;
                         currentMatch.User1Liked = true;
-                        currentMatch.User1LikedTime = DateTime.Now;
-                        await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("Match");
-                        await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("Match");
+                        currentMatch.User1LikedTime = DateTime.UtcNow;
+                        await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("Matcher", matchRes);
+                        await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("Matcher", matchRes);
                         response.Data = true;
                     }
                     else
                     {
                         currentMatch.User1Liked = true;
-                        currentMatch.User1LikedTime = DateTime.Now;
+                        currentMatch.User1LikedTime = DateTime.UtcNow;
                         await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("UserLiked", user.Id);
                         response.Data = true;
                     }
@@ -584,17 +610,22 @@ namespace Z1.Match
                 {
                     if(currentMatch.User1Liked == true)
                     {
+                        var matchRes = new MatchResponse()
+                        {
+                            Status = "Match",
+                        };
+
                         currentMatch.IsPartial = false;
                         currentMatch.User2Liked = true;
-                        currentMatch.User2LikedTime = DateTime.Now;
-                        await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("Match");
-                        await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("Match");
+                        currentMatch.User2LikedTime = DateTime.UtcNow;
+                        await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("Matcher", matchRes);
+                        await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("Matcher", matchRes);
                         response.Data = true;
                     }
                     else
                     {
                         currentMatch.User2Liked = true;
-                        currentMatch.User2LikedTime = DateTime.Now;
+                        currentMatch.User2LikedTime = DateTime.UtcNow;
                         await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("UserLiked");
                         response.Data = true;
                     }
@@ -615,8 +646,13 @@ namespace Z1.Match
                 currentMatch.IsActive = false;
                 await _context.SaveChangesAsync();
 
-                await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("Skip");
-                await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("Skip");
+                var matchRes = new MatchResponse()
+                {
+                    Status = "Skip",
+                };
+
+                await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("Matcher", matchRes);
+                await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("Matcher", matchRes);
                 response.Data = true;
             }
             else
@@ -627,44 +663,45 @@ namespace Z1.Match
             return response;
         }
 
-        public BaseResponse<CurrentMatchDto> GetCurrentMatch(User user)
+        public async Task<bool> PartialChatCleaner()
         {
-            var currentMatch = _context.Matches.FirstOrDefault(x => (x.User1Id == user.Id || x.User2Id == user.Id) 
-            && x.IsPartial && x.IsActive && x.CreatedAt.AddDays(1) > DateTime.Now );
+            var partialChats = _context.Matches.Where(x => x.IsPartial 
+            && x.User1Liked == false
+            && x.User2Liked == false
+            && x.IsActive
+            && x.CreatedAt.AddDays(1) < DateTime.Now);
 
-            var response = new BaseResponse<CurrentMatchDto>();
-
-            if (currentMatch != null) {
-                var matchUserId = currentMatch.User1Id == user.Id ? currentMatch.User2Id : currentMatch.User1Id;
-
-                var matchProfile = _context.Profiles.Include(x => x.Images).FirstOrDefault(x => x.UserId == matchUserId);
-
-                if (matchProfile != null) {
-                    response.Data = new CurrentMatchDto()
-                    {
-                        MatchId = currentMatch.Id,
-                        MatchUserId = matchUserId,
-                        ProfilePic = _blobService.GenerateSasToken(matchProfile.Images.First().ImageUrl),
-                        CreatedAt = currentMatch.CreatedAt
-                    };
-
-                    return response;
+            if (partialChats.Count() > 0) {
+                foreach (var chat in partialChats) {
+                    chat.IsActive = false;
                 }
 
-                return response;
+                await _context.SaveChangesAsync();
 
+                return true;
             }
 
-            return response;
+            return false;
         }
 
-        //helper
-
-        public async Task<bool> AddToMatchQueue(string userId, string latitude, string longitude)
+        public int GetMatchQueueCount()
         {
+            return _context.MatchQueue.Count();
+        }
+
+        public async Task<string> AddToMatchQueue(string userId, string latitude, string longitude)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id.ToString() == userId);
+
+            var existingMatchCount = _context.Matches.Where(x => x.CreatedAt.Date == DateTime.UtcNow.Date && (x.User1Id.ToString() == userId || x.User2Id.ToString() == userId)).Count();
+
+            if(!user.Subscribed && existingMatchCount >= _generalSettings.FreePerDayMatchLimit)
+            {
+                return "DailyLimitReached";
+            };
+
             if (!_context.MatchQueue.Any(x => x.UserId.ToString() == userId))
             {
-                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id.ToString() == userId);
 
                 var lati = double.Parse(latitude);
                 var longi = double.Parse(longitude);
@@ -677,12 +714,13 @@ namespace Z1.Match
                 _context.MatchQueue.Add(addUser);
                 await _context.SaveChangesAsync();
 
-                return true;
+                return "SearchingForMatch";
             }
 
-            return false;    
+            return "AlreadyInQueue";    
         }
 
+        //helper
         static int filterScorer(int userDetail, bool userIsMandatory, IEnumerable<FilterModel> userFilterModel, int matchDetail, bool matchIsMandatory, IEnumerable<FilterModel> matchFilterModel)
         {
             var points = 0;

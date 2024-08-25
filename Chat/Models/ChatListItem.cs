@@ -9,6 +9,7 @@
         public string LastMessage { get; set; }
         public int UnreadCount { get; set; }
         public DateTime? CreatedAt { get; set; }
+        public bool IsPartial { get; set; }
         public List<MessageDto> Messages { get; set; }
     }
 }

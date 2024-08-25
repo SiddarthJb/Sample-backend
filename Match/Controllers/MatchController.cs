@@ -43,12 +43,5 @@ namespace Z1.Match.Controllers
             var user = (User)HttpContext.Items["User"];
             return Ok(await _matchService.Skip(user, partialUserId));
         }
-
-        [HttpGet("get-current-match")]
-        public async Task<IActionResult> GetCurrentMatch()
-        {
-            var user = (User)HttpContext.Items["User"];
-            return Ok(_matchService.GetCurrentMatch(user));
-        }
     }
 }

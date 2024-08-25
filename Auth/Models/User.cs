@@ -16,6 +16,7 @@ namespace Z1.Auth.Models
         public List<RefreshToken> RefreshTokens { get; set; }
         //public ICollection<Matches> Matches { get; } = new List<Matches>();
         public ICollection<MatchQueue> MatchQueue { get; } = new List<MatchQueue>();
+        public bool Subscribed { get; set; } = false;
     }
 
     public class Role : IdentityRole<int>

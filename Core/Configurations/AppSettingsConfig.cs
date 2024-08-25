@@ -11,6 +11,7 @@
 
             services.AddOptions<GoogleSettings>().Bind(configuration.GetSection(GoogleSettings.Key));
             services.AddOptions<AzureBlobStorageSettings>().Bind(configuration.GetSection(AzureBlobStorageSettings.Key));
+            services.AddOptions<GeneralSettings>().Bind(configuration.GetSection(GeneralSettings.Key));
 
         }
     }

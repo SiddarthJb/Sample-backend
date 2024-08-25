@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Z1.Auth.Models;
-using Z1.Chat;
 using Z1.Chat.Interfaces;
 using Z1.Chat.Models;
 using Z1.Match.Interfaces;
@@ -23,8 +21,15 @@ namespace Z1
 
         public async Task StartMatching(string userId, string latitude, string longitude)
         {
-            await _matchService.AddToMatchQueue(userId, latitude, longitude);
-            await Clients.Caller.SendAsync("SearchingForMatch", "Searching for a match...");
+            var status = await _matchService.AddToMatchQueue(userId, latitude, longitude);
+
+            var matcher = new MatchResponse()
+            {
+                Status = status,
+            };
+
+            await Clients.Caller.SendAsync("Matcher", matcher);
+            await Clients.All.SendAsync("MatcherCount", _matchService.GetMatchQueueCount());
         }
 
         public async Task SendMessage(NewMessage message)
@@ -35,7 +40,7 @@ namespace Z1
                 SenderId = message.SenderId,
                 ReceiverId = message.ReceiverId,
                 Text = message.Text.Trim(),
-                Timestamp = DateTime.Now,
+                Timestamp = DateTime.UtcNow,
                 IsImage = message.IsImage,
                 ImageUrl = message.ImageUrl ?? "",
                 IsVoiceMessage = message.IsVoiceMessage,
@@ -52,5 +57,12 @@ namespace Z1
         {
             await Clients.All.SendAsync("Typing", userId);
         }
+
+        // Models
+
+        public class MatchResponse {
+            public string Status { get; set; }
+        }
+        
     }
 }

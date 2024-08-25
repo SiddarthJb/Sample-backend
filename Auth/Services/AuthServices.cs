@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Net;
 using Z1.Auth.Dtos;
 using Z1.Auth.Enums;
 using Z1.Auth.Interfaces;
@@ -107,6 +108,7 @@ namespace Z1.Auth.Services
                     RefreshToken = refresh.Token
                 };
 
+                response.Status = (int)HttpStatusCode.OK;
                 return response;
             }
             catch (Exception ex)

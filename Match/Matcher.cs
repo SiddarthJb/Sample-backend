@@ -20,6 +20,7 @@ namespace Z1.Match
                 {
                     var matchingService = scope.ServiceProvider.GetRequiredService<IMatchService>();
                     await matchingService.Search();
+                    await matchingService.PartialChatCleaner();
                 }
 
                 // Wait for a period before checking the queue again
