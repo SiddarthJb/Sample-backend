@@ -17,6 +17,9 @@ namespace Z1.Chat.Models
         public int ReplyToId { get;set; }
         public int MatchId { get; set; }
         public Matches Match { get; set; } = null!;
-        public bool isSeen { get; set; }
+        public int? SeenBy1 { get; set; }
+        public int? SeenBy2 { get; set; }
+        public int? DeleteFor1 { get; set; }
+        public int? DeleteFor2 { get; set; }    
     }
 }

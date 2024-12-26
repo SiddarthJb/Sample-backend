@@ -1,7 +1,12 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using IdentityModel;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using Z1.Auth.Dtos;
 using Z1.Auth.Enums;
 using Z1.Auth.Interfaces;
@@ -9,8 +14,6 @@ using Z1.Auth.Models;
 using Z1.Core;
 using Z1.Core.Data;
 using Z1.Core.Exceptions;
-using Z1.Profiles.Models;
-
 namespace Z1.Auth.Services
 {
     /// <summary>
@@ -20,62 +23,196 @@ namespace Z1.Auth.Services
     {
         private readonly AppDbContext _context;
         //private readonly IGoogleAuthService _googleAuthService;
-        //private readonly IFacebookAuthService _facebookAuthService;
+        private readonly IFacebookAuthService _facebookAuthService;
         private readonly UserManager<User> _userManager;
         private readonly IJwt _jwt;
         private readonly JwtSettings _jwtSettings;
+        private readonly FacebookAuthSettings _facebookAuthConfig;
 
         public AuthServices(
             AppDbContext context,
             //IGoogleAuthService googleAuthService,
-            //IFacebookAuthService facebookAuthService,
+            IFacebookAuthService facebookAuthService,
+            IOptions<FacebookAuthSettings> facebookAuthConfig,
             UserManager<User> userManager,
             IJwt jwt,
             IOptions<JwtSettings> jwtSettings)
         {
             _context = context;
             //_googleAuthService = googleAuthService;
-            //_facebookAuthService = facebookAuthService;
+            _facebookAuthService = facebookAuthService;
+            _facebookAuthConfig = facebookAuthConfig.Value;
             _userManager = userManager;
             _jwt = jwt;
             _jwtSettings = jwtSettings.Value;
         }
 
-        public async Task<BaseResponse<LoginResposeDto>> Login(LoginRequestDto model, string ipAddress)
+        /// <summary>
+        /// Facebook SignIn
+        /// </summary>
+        /// <param name="model">the view model</param>
+        /// <returns>Task&lt;BaseResponse&lt;JwtResponseVM&gt;&gt;</returns>
+        //public async Task<BaseResponse<SignInResposeDto>> SignInWithFacebook(SignInRequestDto model)
+        //{
+        //    var validatedFbToken = await _facebookAuthService.ValidateFacebookToken(model.AccessToken);
+
+        //    if (validatedFbToken.Errors.Any())
+        //        return new BaseResponse<JwtResponseVM>(validatedFbToken.ResponseMessage, validatedFbToken.Errors);
+
+        //    var userInfo = await _facebookAuthService.GetFacebookUserInformation(model.AccessToken);
+
+        //    if (userInfo.Errors.Any())
+        //        return new BaseResponse<JwtResponseVM>(null, userInfo.Errors);
+
+        //    var userToBeCreated = new CreateUserFromSocialLogin
+        //    {
+        //        FirstName = userInfo.Data.FirstName,
+        //        LastName = userInfo.Data.LastName,
+        //        Email = userInfo.Data.Email,
+        //        ProfilePicture = userInfo.Data.Picture.Data.Url.AbsoluteUri,
+        //        LoginProviderSubject = userInfo.Data.Id,
+        //    };
+
+        //    var user = await _userManager.CreateUserFromSocialLogin(_context, userToBeCreated, LoginProvider.Facebook);
+
+        //    if (user is not null)
+        //    {
+        //        var jwtResponse = CreateJwtToken(user);
+
+        //        var data = new JwtResponseVM
+        //        {
+        //            Token = jwtResponse,
+        //        };
+
+        //        return new BaseResponse<JwtResponseVM>(data);
+        //    }
+
+        //    return new BaseResponse<JwtResponseVM>(null, userInfo.Errors);
+
+        //}
+
+        public async Task<BaseResponse<LoginResponseDto>> Login(LoginRequestDto model, string ipAddress)
         {
             try
             {
-                // 1st validate token - To Do
-                if (model.Provider != AuthProvider.Email)
+                string email = String.Empty;
+                var response = new BaseResponse<LoginResponseDto>();
+
+                if(model.Provider == AuthProvider.Facebook)
                 {
-                    throw new AppException("Provider not correct");
+                    var keys = await _facebookAuthService.GetFacebookKeysAsync();
+
+                    if (model.Platform == "ios")
+                    {
+                        //We are using limited login for Ios
+                        var handler = new JwtSecurityTokenHandler();
+
+                        var validationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuer = true,
+                            ValidIssuer = "https://www.facebook.com",
+
+                            ValidateAudience = true,
+                            ValidAudience = _facebookAuthConfig.AppId,
+
+                            ValidateLifetime = true,
+
+                            ValidateIssuerSigningKey = true,
+                            IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
+                            {
+                                List<SecurityKey> securityKeys = new();
+
+                                foreach (var webKey in keys.Keys)
+                                {
+                                    var e = Base64Url.Decode(webKey.E);
+                                    var n = Base64Url.Decode(webKey.N);
+
+                                    var key = new RsaSecurityKey(new RSAParameters { Exponent = e, Modulus = n })
+                                    {
+                                        KeyId = webKey.Kid
+                                    };
+
+                                    securityKeys.Add(key);
+                                }
+
+                                return securityKeys;
+                            }
+                        };
+
+                        try
+                        {
+                            SecurityToken validatedToken;
+                            var principal = handler.ValidateToken(model.Token, validationParameters, out validatedToken);
+                            var jwtToken = handler.ReadJwtToken(model.Token);
+
+                            email = jwtToken.Claims.FirstOrDefault(claim => claim.Type == "email")?.Value;
+
+                            if (email == null) {
+                                response.Status = (int)HttpStatusCode.Unauthorized;
+                                response.Errors = new List<string>() { "Error getting user details from authentication provider" };
+                                return response;
+                            }
+                        }
+                        catch (SecurityTokenException)
+                        {
+                            response.Status = (int)HttpStatusCode.Unauthorized;
+                            response.Errors = new List<string>() { "Facebook token is invalid" };
+                            return response;
+                        }
+
+                    }
+                    else
+                    {
+                        //This is for normal token which Andorid gets.
+
+                        var validatedFbToken = await _facebookAuthService.ValidateFacebookToken(model.Token);
+
+                        if (validatedFbToken == null)
+                            return new BaseResponse<LoginResponseDto>() { Errors = new List<string>() { "Error authenticating with facebook" } };
+
+                        var userInfo = await _facebookAuthService.GetFacebookUserInformation(model.Token);
+
+                        if (userInfo.Errors.Any())
+                            return new BaseResponse<LoginResponseDto>(null, "Error getting user details from facebook");
+
+                        email = userInfo.Data.Email;
+                    }
+
                 }
 
-                var user = await _context.Users.SingleOrDefaultAsync(x => x.Email == model.Email).ConfigureAwait(false);
+                if (String.IsNullOrEmpty(email))
+                {
+                    response.Status = (int)HttpStatusCode.Unauthorized;
+                    response.Errors = new List<string>() { "Error getting user details from authentication provider" };
+                    return response;
+                }
 
-                var response = new BaseResponse<LoginResposeDto>();
+                var user = await _context.Users.SingleOrDefaultAsync(x => x.Email == email && x.IsActive).ConfigureAwait(false);
 
+                //New user flow
                 if (user == null)
                 {
-                    var pendingUser = await _context.PendingUsers.SingleOrDefaultAsync(x => x.Email == model.Email).ConfigureAwait(false);
+                    var pendingUser = await _context.PendingUsers.SingleOrDefaultAsync(x => x.Email == email && x.IsActive).ConfigureAwait(false);
 
                     if (pendingUser != null)
                     {
-                        response.Data = new LoginResposeDto() { UserState = UserState.PhoneVerification, Email = model.Email };
+                        response.Data = new LoginResponseDto() { UserState = UserState.PhoneVerification, Email = email };
+                        response.Status = (int)HttpStatusCode.OK;
                         return response;
                     }
 
                     var newPendingUser = new PendingUser()
                     {
-                        Email = model.Email,
+                        Email = email,
                         Name = "",
-                        AuthProvider = AuthProvider.Email,
+                        AuthProvider = model.Provider,
                     };
 
                     await _context.PendingUsers.AddAsync(newPendingUser);
                     await _context.SaveChangesAsync();
 
-                    response.Data = new LoginResposeDto() { UserState = UserState.PhoneVerification, Email = model.Email };
+                    response.Status = (int)HttpStatusCode.OK;
+                    response.Data = new LoginResponseDto() { UserState = UserState.PhoneVerification, Email = email };
                     return response;
                 }
 
@@ -87,7 +224,7 @@ namespace Z1.Auth.Services
                 // remove old refresh tokens from user
                 removeOldRefreshTokens(user);
 
-                // save changes to db
+                 // save changes to db
                 _context.Update(user);
                 await _context.SaveChangesAsync();
 
@@ -99,13 +236,14 @@ namespace Z1.Auth.Services
                     userState = UserState.ProfileCreation;
                 }
 
-                response.Data = new LoginResposeDto()
+                response.Data = new LoginResponseDto()
                 {
                     UserState = userState,
                     UserId = user.Id.ToString(),
-                    Email = model.Email,
+                    Email = email,
                     AccessToken = access,
-                    RefreshToken = refresh.Token
+                    RefreshToken = refresh.Token,
+                    IsSubscribed = user.IsSubscribed
                 };
 
                 response.Status = (int)HttpStatusCode.OK;
@@ -143,7 +281,7 @@ namespace Z1.Auth.Services
             return response;
         }
 
-        public async Task<BaseResponse<LoginResposeDto>> VerifyOtp(VerifyOtpRequestDto model, string ipAddress)
+        public async Task<BaseResponse<LoginResponseDto>> VerifyOtp(VerifyOtpRequestDto model, string ipAddress)
         {
             var pendingUser = await _context.PendingUsers.SingleOrDefaultAsync(x => x.Email == model.email);
 
@@ -152,7 +290,7 @@ namespace Z1.Auth.Services
                 throw new NotFoundException("User not found");
             }
 
-            var response = new BaseResponse<LoginResposeDto>();
+            var response = new BaseResponse<LoginResponseDto>();
 
             if (pendingUser.Code == model.otp)
             {
@@ -184,13 +322,14 @@ namespace Z1.Auth.Services
                 _context.Update(user);
                 await _context.SaveChangesAsync();
 
-                response.Data = new LoginResposeDto()
+                response.Data = new LoginResponseDto()
                 {
-                    UserState = UserState.ExistingUser,
+                    UserState = UserState.UserVerification,
                     Email = pendingUser.Email,
                     UserId = user.Id.ToString(),
                     AccessToken = access,
-                    RefreshToken = refresh.Token
+                    RefreshToken = refresh.Token,
+                    IsSubscribed = false
                 };
             }
             else
@@ -200,7 +339,7 @@ namespace Z1.Auth.Services
             return response;
         }
 
-        public async Task<BaseResponse<LoginResposeDto>> RefreshToken(string token, string ipAddress)
+        public async Task<BaseResponse<LoginResponseDto>> RefreshToken(string token, string ipAddress)
         {
             var user = getUserByRefreshToken(token);
             var refreshToken = user.RefreshTokens.Single(x => x.Token == token);
@@ -230,14 +369,23 @@ namespace Z1.Auth.Services
             // generate new jwt
             var access = _jwt.GenerateJwtToken(user);
 
-            var response = new BaseResponse<LoginResposeDto>();
-            response.Data = new LoginResposeDto()
+            UserState currentUserState;
+
+            var profile = _context.Profiles.FirstOrDefault(x => x.UserId == user.Id);
+
+            if (profile != null) currentUserState = UserState.ExistingUser;
+            else if (user.PhoneNumberConfirmed) currentUserState= UserState.UserVerification;
+            else currentUserState = UserState.PhoneVerification;
+
+            var response = new BaseResponse<LoginResponseDto>();
+            response.Data = new LoginResponseDto()
             {
-                UserState = UserState.ExistingUser,
+                UserState = currentUserState,
                 Email = user.Email,
                 UserId = user.Id.ToString(),
                 AccessToken = access,
-                RefreshToken = newRefreshToken.Token
+                RefreshToken = newRefreshToken.Token,
+                IsSubscribed = user.IsSubscribed
             };
             return response;
         }
@@ -366,50 +514,6 @@ namespace Z1.Auth.Services
             };
 
             return new BaseResponse<SignInResposeDto>(data);
-        }
-
-        /// <summary>
-        /// Facebook SignIn
-        /// </summary>
-        /// <param name="model">the view model</param>
-        /// <returns>Task&lt;BaseResponse&lt;JwtResponseVM&gt;&gt;</returns>
-        public async Task<BaseResponse<SignInResposeDto>> SignInWithFacebook(SignInRequestDto model)
-        {
-            var validatedFbToken = await _facebookAuthService.ValidateFacebookToken(model.AccessToken);
-
-            if (validatedFbToken.Errors.Any())
-                return new BaseResponse<JwtResponseVM>(validatedFbToken.ResponseMessage, validatedFbToken.Errors);
-
-            var userInfo = await _facebookAuthService.GetFacebookUserInformation(model.AccessToken);
-
-            if (userInfo.Errors.Any())
-                return new BaseResponse<JwtResponseVM>(null, userInfo.Errors);
-
-            var userToBeCreated = new CreateUserFromSocialLogin
-            {
-                FirstName = userInfo.Data.FirstName,
-                LastName = userInfo.Data.LastName,
-                Email = userInfo.Data.Email,
-                ProfilePicture = userInfo.Data.Picture.Data.Url.AbsoluteUri,
-                LoginProviderSubject = userInfo.Data.Id,
-            };
-
-            var user = await _userManager.CreateUserFromSocialLogin(_context, userToBeCreated, LoginProvider.Facebook);
-
-            if (user is not null)
-            {
-                var jwtResponse = CreateJwtToken(user);
-
-                var data = new JwtResponseVM
-                {
-                    Token = jwtResponse,
-                };
-
-                return new BaseResponse<JwtResponseVM>(data);
-            }
-
-            return new BaseResponse<JwtResponseVM>(null, userInfo.Errors);
-
         }
 #endif
 

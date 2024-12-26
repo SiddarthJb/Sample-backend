@@ -1,6 +1,6 @@
 ﻿namespace Z1.Profiles.Dtos
 {
-    public class PartialChatProfileDto
+    public class ProfileDto
     {
         public string Work { get; set; }
         public string ImageUrl { get; set; }
@@ -14,15 +14,13 @@
         public string Alcohol { get; set; }
         public string Smoke { get; set; }
         public string Religion { get; set; }
-        public string Profession { get; set; }
+        public string? Profession { get; set; }
         public List<string> Languages { get; set; }
         public List<string> Interests { get; set; }
-    }
-
-    public class ProfileDto : PartialChatProfileDto
-    {
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public List<ImagesDto> Images { get; set; }
-        public string Bio {  get; set; }
+        public string? Bio { get; set; }
+        public bool IsSubscribed { get; set; }
+        public int Keys { get; set; }
     }
 }

@@ -31,7 +31,10 @@ namespace Z1.Chat
                 ReceiverId = x.ReceiverId,
                 Timestamp = x.Timestamp,
                 MatchId = x.MatchId,
-                IsSeen = x.isSeen,
+                SeenBy1 = x.SeenBy1,
+                SeenBy2 = x.SeenBy2,
+                DeleteFor1 = x.DeleteFor1,
+                DeleteFor2 = x.DeleteFor2,
             })
                 .Where(x => x.MatchId == matchId)
                 .OrderByDescending(m => m.Timestamp)
@@ -44,7 +47,7 @@ namespace Z1.Chat
         {
             var matches = _context.Matches
                  .Where(x => (x.User1Id == user.Id || x.User2Id == user.Id) 
-                 && x.IsActive == true)
+                 && x.IsActive == true && ((x.IsPartial && x.CreatedAt.AddDays(1) < DateTime.UtcNow) || !x.IsPartial))
                  .Include(x => x.Messages).ToList();
 
             var result = new List<ChatListItem>();
@@ -77,7 +80,10 @@ namespace Z1.Chat
                     ReceiverId = x.ReceiverId,
                     Timestamp = x.Timestamp,
                     MatchId = x.MatchId,
-                    IsSeen = x.isSeen,
+                    SeenBy1 = x.SeenBy1,
+                    SeenBy2 = x.SeenBy2,
+                    DeleteFor1 = x.DeleteFor1,
+                    DeleteFor2 = x.DeleteFor2,
                 })
                 .Where(x => x.MatchId == match.Id)
                 .OrderByDescending(m => m.Timestamp)
@@ -92,7 +98,7 @@ namespace Z1.Chat
             response.Data = result;
 
             return response;
-        }
+         }
 
         public async Task<Message> AddMessage(Message message)
         {
@@ -111,7 +117,7 @@ namespace Z1.Chat
             List<ChatListItem> list = new List<ChatListItem>();
             foreach (var match in matches)
             {
-                var unseenMessages = match.Messages.Where(x => x.isSeen == false);
+                var unseenMessages = match.Messages.Where(x => x.SeenBy1 != user.Id && x.SeenBy2 != user.Id);
                 var messageListItem = new ChatListItem();
 
                 messageListItem.LastMessage = "";
@@ -159,7 +165,7 @@ namespace Z1.Chat
 
             if (currentMatch != null)
             {
-                var unseenMessages = currentMatch.Messages.Where(x => x.isSeen == false);
+                var unseenMessages = currentMatch.Messages.Where(x => x.SeenBy1 != user.Id && x.SeenBy2 != user.Id);
                 var messageListItem = new ChatListItem();
 
                 messageListItem.LastMessage = "";
@@ -194,7 +200,7 @@ namespace Z1.Chat
             return response;
         }
 
-        public async Task<BaseResponse<bool>> MarkAsReadAsync(long messageId)
+        public async Task<BaseResponse<bool>> MarkAsReadAsync(User user , long messageId)
         {
             var response = new BaseResponse<bool>();
 
@@ -204,10 +210,16 @@ namespace Z1.Chat
 
                 if (lstMessage != null)
                 {
-                    var messages = _context.Messages.Where(x => x.MatchId == lstMessage.MatchId && x.Timestamp <= lstMessage.Timestamp && x.isSeen == false).ToList();
+                    var messages = _context.Messages.Where(x => x.MatchId == lstMessage.MatchId && x.Timestamp <= lstMessage.Timestamp && (x.SeenBy1 != user.Id && x.SeenBy2 != user.Id)).ToList();
                     foreach (var message in messages)
                     {
-                        message.isSeen = true;
+                        if (message.SeenBy1 != null) { 
+                            message.SeenBy1 = user.Id;
+                        }
+                        else
+                        {
+                            message.SeenBy2 = user.Id;
+                        }
                     }
 
                     _context.SaveChanges();
@@ -221,6 +233,33 @@ namespace Z1.Chat
             }
 
 
+
+            return response;
+        }
+
+        public async Task<BaseResponse<bool>> DeleteHistory(User user, int matchId, int lastMessageId)
+        {
+            BaseResponse<bool> response = new();
+
+            var chatHistory = _context.Messages.Where(x => x.MatchId == matchId && x.IsActive && x.Id < lastMessageId);
+
+            if (chatHistory.Count() > 0)
+            {
+                foreach (var chat in chatHistory)
+                {
+                    if(chat.DeleteFor1 == null)
+                    {
+                        chat.DeleteFor1 = user.Id;
+                    }
+                    else
+                    {
+                        chat.DeleteFor2 = user.Id;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                response.Data = true;
+            }
 
             return response;
         }

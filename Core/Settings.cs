@@ -24,6 +24,15 @@
         public string ClientSecret { get; set; } = null!;
     }
 
+    public class FacebookAuthSettings
+    {
+        public const string Key = "FaceBook";
+        public string TokenValidationUrl { get; set; }
+        public string UserInfoUrl { get; set; }
+        public string AppId { get; set; }
+        public string AppSecret { get; set; }
+    }
+
     public class AzureBlobStorageSettings
     {
         public const string Key = "AzureBlobStorage";

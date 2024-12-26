@@ -8,10 +8,10 @@ namespace Z1.Auth.Interfaces
     {
         //Task<BaseResponse<SignInResposeDto>> SignInWithGoogle(SignInRequestDto model);
         //Task<BaseResponse<SignInResposeDto>> SignInWithFacebook(SignInRequestDto model);
-        Task<BaseResponse<LoginResposeDto>> Login(LoginRequestDto model, string ipAddress);
+        Task<BaseResponse<LoginResponseDto>> Login(LoginRequestDto model, string ipAddress);
         Task<BaseResponse<SendOtpRequestDto>> SendOtp(SendOtpRequestDto model);
-        Task<BaseResponse<LoginResposeDto>> VerifyOtp(VerifyOtpRequestDto model, string ipAddress);
-        Task<BaseResponse<LoginResposeDto>> RefreshToken(string token, string ipAddress);
+        Task<BaseResponse<LoginResponseDto>> VerifyOtp(VerifyOtpRequestDto model, string ipAddress);
+        Task<BaseResponse<LoginResponseDto>> RefreshToken(string token, string ipAddress);
         void RevokeToken(string token, string ipAddress);
         IEnumerable<User> GetAll();
         User GetById(int id);

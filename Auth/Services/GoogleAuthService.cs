@@ -10,7 +10,7 @@ using Z1.Core.Data;
 using static Google.Apis.Auth.GoogleJsonWebSignature;
 
 
-namespace Z1.Auth.Google
+namespace Z1.Auth.Services
 {
     /// <summary>
     /// Class Facebook Auth Service.
@@ -57,7 +57,7 @@ namespace Z1.Auth.Google
                 _logger.Error(ex.Message, ex);
                 return new BaseResponse<User>()
                 {
-                    Errors = new List<string> {"Failed to get response"}
+                    Errors = new List<string> { "Failed to get response" }
                 };
             }
 

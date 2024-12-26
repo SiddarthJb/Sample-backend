@@ -13,8 +13,8 @@ using Z1.Core.Data;
 namespace Z1.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240701155910_Match")]
-    partial class Match
+    [Migration("20241226084755_DeleteFor")]
+    partial class DeleteFor
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,36 @@ namespace Z1.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("InterestsProfile", b =>
+                {
+                    b.Property<int>("InterestsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProfilesId")
+                        .HasColumnType("int");
+
+                    b.HasKey("InterestsId", "ProfilesId");
+
+                    b.HasIndex("ProfilesId");
+
+                    b.ToTable("InterestsProfile");
+                });
+
+            modelBuilder.Entity("LanguagesProfile", b =>
+                {
+                    b.Property<int>("LanguagesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProfilesId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LanguagesId", "ProfilesId");
+
+                    b.HasIndex("ProfilesId");
+
+                    b.ToTable("LanguagesProfile");
+                });
 
             modelBuilder.Entity("Z1.Auth.Models.PendingUser", b =>
                 {
@@ -48,18 +78,21 @@ namespace Z1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ModifiedAt")
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -149,6 +182,12 @@ namespace Z1.Migrations
                     b.Property<string>("CountryCode")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -156,11 +195,26 @@ namespace Z1.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSubscribed")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Keys")
+                        .HasColumnType("int");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -283,21 +337,30 @@ namespace Z1.Migrations
 
             modelBuilder.Entity("Z1.Chat.Models.Message", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeleteFor1")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeleteFor2")
+                        .HasColumnType("int");
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsImage")
                         .HasColumnType("bit");
@@ -305,11 +368,14 @@ namespace Z1.Migrations
                     b.Property<bool>("IsVoiceMessage")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("ModifiedAt")
+                    b.Property<int>("MatchId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.Property<int>("ReceiverId")
                         .HasColumnType("int");
@@ -317,11 +383,14 @@ namespace Z1.Migrations
                     b.Property<int>("ReplyToId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SenderId")
+                    b.Property<int?>("SeenBy1")
                         .HasColumnType("int");
 
-                    b.Property<bool>("Temp")
-                        .HasColumnType("bit");
+                    b.Property<int?>("SeenBy2")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -335,6 +404,8 @@ namespace Z1.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MatchId");
 
                     b.ToTable("Messages");
                 });
@@ -389,6 +460,15 @@ namespace Z1.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("MaxAge")
                         .HasColumnType("int");
 
@@ -402,6 +482,12 @@ namespace Z1.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("MinHeight")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
 
                     b.Property<int>("UserId")
@@ -536,9 +622,24 @@ namespace Z1.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<Point>("Location")
                         .IsRequired()
                         .HasColumnType("geography");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("RequestTime")
                         .HasColumnType("datetime2");
@@ -567,52 +668,20 @@ namespace Z1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
 
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Status")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<int>("User1Id")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsPartial")
+                        .HasColumnType("bit");
 
-                    b.Property<int>("User2Id")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("User1Id");
-
-                    b.HasIndex("User2Id");
-
-                    b.ToTable("Matches");
-                });
-
-            modelBuilder.Entity("Z1.Match.Models.PartialMatches", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.Property<int>("Skipped")
                         .HasColumnType("int");
@@ -641,7 +710,7 @@ namespace Z1.Migrations
 
                     b.HasIndex("User2Id");
 
-                    b.ToTable("PartialMatches");
+                    b.ToTable("Matches");
                 });
 
             modelBuilder.Entity("Z1.Match.Models.ProfessionFilter", b =>
@@ -770,6 +839,52 @@ namespace Z1.Migrations
                     b.ToTable("ZodiacFilters");
                 });
 
+            modelBuilder.Entity("Z1.Profiles.Models.Image", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsBlurred")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSmall")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProfileId");
+
+                    b.ToTable("Images");
+                });
+
             modelBuilder.Entity("Z1.Profiles.Models.Interests", b =>
                 {
                     b.Property<int>("Id")
@@ -781,18 +896,21 @@ namespace Z1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
 
                     b.Property<string>("Interest")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ModifiedAt")
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -810,18 +928,21 @@ namespace Z1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Language")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ModifiedAt")
+                    b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -842,6 +963,16 @@ namespace Z1.Migrations
                     b.Property<int>("Alcohol")
                         .HasColumnType("int");
 
+                    b.Property<string>("Bio")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
                     b.Property<DateOnly>("Dob")
                         .HasColumnType("date");
 
@@ -854,21 +985,10 @@ namespace Z1.Migrations
                     b.Property<short>("Height")
                         .HasColumnType("smallint");
 
-                    b.Property<string>("Interests")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("InterestsId")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Kids")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Languages")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("LanguagesId")
                         .HasColumnType("int");
 
                     b.Property<Point>("Location")
@@ -876,6 +996,12 @@ namespace Z1.Migrations
                         .HasColumnType("geography");
 
                     b.Property<int>("MaritalStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -894,19 +1020,49 @@ namespace Z1.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Work")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Zodiac")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("InterestsId");
-
-                    b.HasIndex("LanguagesId");
-
                     b.HasIndex("UserId")
                         .IsUnique();
 
                     b.ToTable("Profiles");
+                });
+
+            modelBuilder.Entity("InterestsProfile", b =>
+                {
+                    b.HasOne("Z1.Profiles.Models.Interests", null)
+                        .WithMany()
+                        .HasForeignKey("InterestsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Z1.Profiles.Models.Profile", null)
+                        .WithMany()
+                        .HasForeignKey("ProfilesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LanguagesProfile", b =>
+                {
+                    b.HasOne("Z1.Profiles.Models.Languages", null)
+                        .WithMany()
+                        .HasForeignKey("LanguagesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Z1.Profiles.Models.Profile", null)
+                        .WithMany()
+                        .HasForeignKey("ProfilesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Z1.Auth.Models.RoleClaim", b =>
@@ -1012,6 +1168,17 @@ namespace Z1.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Z1.Chat.Models.Message", b =>
+                {
+                    b.HasOne("Z1.Match.Models.Matches", "Match")
+                        .WithMany("Messages")
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Match");
+                });
+
             modelBuilder.Entity("Z1.Match.Models.AlcoholFilter", b =>
                 {
                     b.HasOne("Z1.Match.Models.Filter", "Filter")
@@ -1092,7 +1259,7 @@ namespace Z1.Migrations
             modelBuilder.Entity("Z1.Match.Models.MatchQueue", b =>
                 {
                     b.HasOne("Z1.Auth.Models.User", "User")
-                        .WithMany()
+                        .WithMany("MatchQueue")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1101,25 +1268,6 @@ namespace Z1.Migrations
                 });
 
             modelBuilder.Entity("Z1.Match.Models.Matches", b =>
-                {
-                    b.HasOne("Z1.Auth.Models.User", "User1")
-                        .WithMany()
-                        .HasForeignKey("User1Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Z1.Auth.Models.User", "User2")
-                        .WithMany()
-                        .HasForeignKey("User2Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User1");
-
-                    b.Navigation("User2");
-                });
-
-            modelBuilder.Entity("Z1.Match.Models.PartialMatches", b =>
                 {
                     b.HasOne("Z1.Auth.Models.User", "User1")
                         .WithMany()
@@ -1204,16 +1352,19 @@ namespace Z1.Migrations
                     b.Navigation("Filter");
                 });
 
+            modelBuilder.Entity("Z1.Profiles.Models.Image", b =>
+                {
+                    b.HasOne("Z1.Profiles.Models.Profile", "Profile")
+                        .WithMany("Images")
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Profile");
+                });
+
             modelBuilder.Entity("Z1.Profiles.Models.Profile", b =>
                 {
-                    b.HasOne("Z1.Profiles.Models.Interests", null)
-                        .WithMany("Profiles")
-                        .HasForeignKey("InterestsId");
-
-                    b.HasOne("Z1.Profiles.Models.Languages", null)
-                        .WithMany("Profiles")
-                        .HasForeignKey("LanguagesId");
-
                     b.HasOne("Z1.Auth.Models.User", "User")
                         .WithOne("Profile")
                         .HasForeignKey("Z1.Profiles.Models.Profile", "UserId")
@@ -1225,17 +1376,19 @@ namespace Z1.Migrations
 
             modelBuilder.Entity("Z1.Auth.Models.User", b =>
                 {
+                    b.Navigation("MatchQueue");
+
                     b.Navigation("Profile");
                 });
 
-            modelBuilder.Entity("Z1.Profiles.Models.Interests", b =>
+            modelBuilder.Entity("Z1.Match.Models.Matches", b =>
                 {
-                    b.Navigation("Profiles");
+                    b.Navigation("Messages");
                 });
 
-            modelBuilder.Entity("Z1.Profiles.Models.Languages", b =>
+            modelBuilder.Entity("Z1.Profiles.Models.Profile", b =>
                 {
-                    b.Navigation("Profiles");
+                    b.Navigation("Images");
                 });
 #pragma warning restore 612, 618
         }

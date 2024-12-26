@@ -7,7 +7,7 @@ using NetTopologySuite.Geometries;
 namespace Z1.Migrations
 {
     /// <inheritdoc />
-    public partial class TillFilter : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -35,6 +35,12 @@ namespace Z1.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CountryCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     AuthProvider = table.Column<int>(type: "int", nullable: false),
+                    Subscribed = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -62,10 +68,11 @@ namespace Z1.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Interest = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -79,10 +86,11 @@ namespace Z1.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Language = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -101,10 +109,11 @@ namespace Z1.Migrations
                     PhoneNo = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CountryCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -238,7 +247,12 @@ namespace Z1.Migrations
                     isReligionMandatory = table.Column<bool>(type: "bit", nullable: false),
                     isEducationMandatory = table.Column<bool>(type: "bit", nullable: false),
                     isZodiacMandatory = table.Column<bool>(type: "bit", nullable: false),
-                    isInterestsMandatory = table.Column<bool>(type: "bit", nullable: false)
+                    isInterestsMandatory = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -252,19 +266,103 @@ namespace Z1.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Matches",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    User1Id = table.Column<int>(type: "int", nullable: false),
+                    User2Id = table.Column<int>(type: "int", nullable: false),
+                    User1Liked = table.Column<bool>(type: "bit", nullable: true),
+                    User2Liked = table.Column<bool>(type: "bit", nullable: true),
+                    Skipped = table.Column<int>(type: "int", nullable: false),
+                    User1LikedTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    User2LikedTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsPartial = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Matches", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Matches_AspNetUsers_User1Id",
+                        column: x => x.User1Id,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
+                    table.ForeignKey(
+                        name: "FK_Matches_AspNetUsers_User2Id",
+                        column: x => x.User2Id,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "MatchQueue",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    Location = table.Column<Point>(type: "geography", nullable: false)
+                    Location = table.Column<Point>(type: "geography", nullable: false),
+                    RequestTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Tries = table.Column<short>(type: "smallint", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MatchQueue", x => x.Id);
                     table.ForeignKey(
                         name: "FK_MatchQueue_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Profiles",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Dob = table.Column<DateOnly>(type: "date", nullable: false),
+                    Age = table.Column<byte>(type: "tinyint", nullable: false),
+                    Height = table.Column<short>(type: "smallint", nullable: false),
+                    Gender = table.Column<int>(type: "int", nullable: false),
+                    MaritalStatus = table.Column<int>(type: "int", nullable: false),
+                    Kids = table.Column<int>(type: "int", nullable: false),
+                    Education = table.Column<int>(type: "int", nullable: false),
+                    Zodiac = table.Column<int>(type: "int", nullable: false),
+                    Alcohol = table.Column<int>(type: "int", nullable: false),
+                    Smoke = table.Column<int>(type: "int", nullable: false),
+                    Religion = table.Column<int>(type: "int", nullable: false),
+                    Profession = table.Column<int>(type: "int", nullable: false),
+                    Location = table.Column<Point>(type: "geography", nullable: false),
+                    Bio = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Work = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Profiles", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Profiles_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -296,53 +394,6 @@ namespace Z1.Migrations
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Profiles",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Dob = table.Column<DateOnly>(type: "date", nullable: false),
-                    Age = table.Column<byte>(type: "tinyint", nullable: false),
-                    Height = table.Column<short>(type: "smallint", nullable: false),
-                    Gender = table.Column<int>(type: "int", nullable: false),
-                    MaritalStatus = table.Column<int>(type: "int", nullable: false),
-                    Kids = table.Column<int>(type: "int", nullable: false),
-                    Education = table.Column<int>(type: "int", nullable: false),
-                    Zodiac = table.Column<int>(type: "int", nullable: false),
-                    Alcohol = table.Column<int>(type: "int", nullable: false),
-                    Smoke = table.Column<int>(type: "int", nullable: false),
-                    Religion = table.Column<int>(type: "int", nullable: false),
-                    Profession = table.Column<int>(type: "int", nullable: false),
-                    Languages = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Interests = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Location = table.Column<Point>(type: "geography", nullable: false),
-                    InterestsId = table.Column<int>(type: "int", nullable: true),
-                    LanguagesId = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Profiles", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Profiles_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Profiles_Interests_InterestsId",
-                        column: x => x.InterestsId,
-                        principalTable: "Interests",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Profiles_Languages_LanguagesId",
-                        column: x => x.LanguagesId,
-                        principalTable: "Languages",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -585,6 +636,116 @@ namespace Z1.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Messages",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SenderId = table.Column<int>(type: "int", nullable: false),
+                    ReceiverId = table.Column<int>(type: "int", nullable: false),
+                    Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsVoiceMessage = table.Column<bool>(type: "bit", nullable: false),
+                    VoiceMessageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsImage = table.Column<bool>(type: "bit", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ReplyToId = table.Column<int>(type: "int", nullable: false),
+                    MatchId = table.Column<int>(type: "int", nullable: false),
+                    isSeen = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Messages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Messages_Matches_MatchId",
+                        column: x => x.MatchId,
+                        principalTable: "Matches",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Images",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProfileId = table.Column<int>(type: "int", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Order = table.Column<int>(type: "int", nullable: false),
+                    IsBlurred = table.Column<bool>(type: "bit", nullable: false),
+                    IsSmall = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Images", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Images_Profiles_ProfileId",
+                        column: x => x.ProfileId,
+                        principalTable: "Profiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "InterestsProfile",
+                columns: table => new
+                {
+                    InterestsId = table.Column<int>(type: "int", nullable: false),
+                    ProfilesId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InterestsProfile", x => new { x.InterestsId, x.ProfilesId });
+                    table.ForeignKey(
+                        name: "FK_InterestsProfile_Interests_InterestsId",
+                        column: x => x.InterestsId,
+                        principalTable: "Interests",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_InterestsProfile_Profiles_ProfilesId",
+                        column: x => x.ProfilesId,
+                        principalTable: "Profiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LanguagesProfile",
+                columns: table => new
+                {
+                    LanguagesId = table.Column<int>(type: "int", nullable: false),
+                    ProfilesId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LanguagesProfile", x => new { x.LanguagesId, x.ProfilesId });
+                    table.ForeignKey(
+                        name: "FK_LanguagesProfile_Languages_LanguagesId",
+                        column: x => x.LanguagesId,
+                        principalTable: "Languages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_LanguagesProfile_Profiles_ProfilesId",
+                        column: x => x.ProfilesId,
+                        principalTable: "Profiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AlcoholFilters_FilterId",
                 table: "AlcoholFilters",
@@ -640,9 +801,19 @@ namespace Z1.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Images_ProfileId",
+                table: "Images",
+                column: "ProfileId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_InterestFilters_FilterId",
                 table: "InterestFilters",
                 column: "FilterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InterestsProfile_ProfilesId",
+                table: "InterestsProfile",
+                column: "ProfilesId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_KidsFilters_FilterId",
@@ -655,9 +826,24 @@ namespace Z1.Migrations
                 column: "FilterId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_LanguagesProfile_ProfilesId",
+                table: "LanguagesProfile",
+                column: "ProfilesId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_MaritalStatusFilter_FilterId",
                 table: "MaritalStatusFilter",
                 column: "FilterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Matches_User1Id",
+                table: "Matches",
+                column: "User1Id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Matches_User2Id",
+                table: "Matches",
+                column: "User2Id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MatchQueue_UserId",
@@ -665,19 +851,14 @@ namespace Z1.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Messages_MatchId",
+                table: "Messages",
+                column: "MatchId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProfessionFilters_FilterId",
                 table: "ProfessionFilters",
                 column: "FilterId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Profiles_InterestsId",
-                table: "Profiles",
-                column: "InterestsId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Profiles_LanguagesId",
-                table: "Profiles",
-                column: "LanguagesId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Profiles_UserId",
@@ -741,7 +922,13 @@ namespace Z1.Migrations
                 name: "EducationFilters");
 
             migrationBuilder.DropTable(
+                name: "Images");
+
+            migrationBuilder.DropTable(
                 name: "InterestFilters");
+
+            migrationBuilder.DropTable(
+                name: "InterestsProfile");
 
             migrationBuilder.DropTable(
                 name: "KidsFilters");
@@ -750,19 +937,22 @@ namespace Z1.Migrations
                 name: "LanguageFilters");
 
             migrationBuilder.DropTable(
+                name: "LanguagesProfile");
+
+            migrationBuilder.DropTable(
                 name: "MaritalStatusFilter");
 
             migrationBuilder.DropTable(
                 name: "MatchQueue");
 
             migrationBuilder.DropTable(
+                name: "Messages");
+
+            migrationBuilder.DropTable(
                 name: "PendingUsers");
 
             migrationBuilder.DropTable(
                 name: "ProfessionFilters");
-
-            migrationBuilder.DropTable(
-                name: "Profiles");
 
             migrationBuilder.DropTable(
                 name: "RefreshToken");
@@ -790,6 +980,12 @@ namespace Z1.Migrations
 
             migrationBuilder.DropTable(
                 name: "Languages");
+
+            migrationBuilder.DropTable(
+                name: "Profiles");
+
+            migrationBuilder.DropTable(
+                name: "Matches");
 
             migrationBuilder.DropTable(
                 name: "Filters");

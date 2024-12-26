@@ -75,18 +75,21 @@ namespace Z1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ModifiedAt")
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -176,6 +179,12 @@ namespace Z1.Migrations
                     b.Property<string>("CountryCode")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -183,11 +192,26 @@ namespace Z1.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSubscribed")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Keys")
+                        .HasColumnType("int");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -208,9 +232,6 @@ namespace Z1.Migrations
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Subscribed")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -322,12 +343,21 @@ namespace Z1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeleteFor1")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeleteFor2")
+                        .HasColumnType("int");
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsImage")
                         .HasColumnType("bit");
@@ -338,16 +368,22 @@ namespace Z1.Migrations
                     b.Property<int>("MatchId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("ModifiedAt")
+                    b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.Property<int>("ReceiverId")
                         .HasColumnType("int");
 
                     b.Property<int>("ReplyToId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SeenBy1")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SeenBy2")
                         .HasColumnType("int");
 
                     b.Property<int>("SenderId")
@@ -363,9 +399,6 @@ namespace Z1.Migrations
                     b.Property<string>("VoiceMessageUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("isSeen")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -424,6 +457,15 @@ namespace Z1.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("MaxAge")
                         .HasColumnType("int");
 
@@ -437,6 +479,12 @@ namespace Z1.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("MinHeight")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
 
                     b.Property<int>("UserId")
@@ -571,9 +619,24 @@ namespace Z1.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<Point>("Location")
                         .IsRequired()
                         .HasColumnType("geography");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("RequestTime")
                         .HasColumnType("datetime2");
@@ -602,8 +665,8 @@ namespace Z1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -611,11 +674,11 @@ namespace Z1.Migrations
                     b.Property<bool>("IsPartial")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("ModifiedAt")
+                    b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.Property<int>("Skipped")
                         .HasColumnType("int");
@@ -784,8 +847,8 @@ namespace Z1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
@@ -800,11 +863,11 @@ namespace Z1.Migrations
                     b.Property<bool>("IsSmall")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("ModifiedAt")
+                    b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.Property<int>("Order")
                         .HasColumnType("int");
@@ -830,18 +893,21 @@ namespace Z1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
 
                     b.Property<string>("Interest")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ModifiedAt")
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -859,18 +925,21 @@ namespace Z1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Language")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ModifiedAt")
+                    b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -895,6 +964,12 @@ namespace Z1.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
                     b.Property<DateOnly>("Dob")
                         .HasColumnType("date");
 
@@ -907,6 +982,9 @@ namespace Z1.Migrations
                     b.Property<short>("Height")
                         .HasColumnType("smallint");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<int>("Kids")
                         .HasColumnType("int");
 
@@ -915,6 +993,12 @@ namespace Z1.Migrations
                         .HasColumnType("geography");
 
                     b.Property<int>("MaritalStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")

@@ -8,6 +8,7 @@ namespace Z1.Auth
     {
         public static void ConfigureAuthServices(this IServiceCollection services)
         {
+            services.AddScoped<IFacebookAuthService, FacebookAuthService>();
             services.AddScoped<IAuthService, AuthServices>();
             services.AddScoped<IJwt, Jwt>();
         }

@@ -21,7 +21,10 @@ namespace Z1.Chat.Models
         public int ReceiverId { get; set; }
         public string Text { get; set; }
         public DateTime Timestamp { get; set; }
-        public bool IsSeen { get; set; }
+        public int? SeenBy1 { get; set; }
+        public int? SeenBy2 { get; set; }
+        public int? DeleteFor1 { get; set; }
+        public int? DeleteFor2 { get; set; }
     }
 
 }

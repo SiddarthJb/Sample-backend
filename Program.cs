@@ -10,6 +10,7 @@ using Z1.Core.Data;
 using Z1.Match;
 using Z1.Profiles;
 using Z1.Core.Interfaces;
+using Microsoft.Extensions.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +58,12 @@ builder.Services.AddScoped<DbContext, AppDbContext>();
 builder.Services.AddSingleton<IUserIdProvider, UserIdProvider>();
 
 builder.Services.ConfigureAuthServices();
+
+builder.Services.AddHttpClient("Facebook", c =>
+{
+    c.BaseAddress = new Uri(builder.Configuration.GetValue<string>("Facebook:BaseUrl"));
+});
+
 builder.Services.ConfigureProfileServices();
 builder.Services.ConfigureMatchServices();
 builder.Services.ConfigureChatServices();
@@ -68,6 +75,11 @@ builder.Services.AddProblemDetails();
 builder.Services.AddSignalR();
 builder.Services.AddHostedService<Matcher>();
 builder.Services.AddSingleton<IBlobService, AzureStorage>();
+builder.Services.AddAzureClients(clientBuilder =>
+{
+    clientBuilder.AddBlobServiceClient(builder.Configuration["StorageConnectionString:blob"]!, preferMsi: true);
+    clientBuilder.AddQueueServiceClient(builder.Configuration["StorageConnectionString:queue"]!, preferMsi: true);
+});
 
 var app = builder.Build();
 

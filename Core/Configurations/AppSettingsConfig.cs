@@ -10,6 +10,7 @@
             services.AddOptions<JwtSettings>().Bind(configuration.GetSection(JwtSettings.Key));
 
             services.AddOptions<GoogleSettings>().Bind(configuration.GetSection(GoogleSettings.Key));
+            services.AddOptions<FacebookAuthSettings>().Bind(configuration.GetSection(FacebookAuthSettings.Key));
             services.AddOptions<AzureBlobStorageSettings>().Bind(configuration.GetSection(AzureBlobStorageSettings.Key));
             services.AddOptions<GeneralSettings>().Bind(configuration.GetSection(GeneralSettings.Key));
 

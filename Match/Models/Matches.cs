@@ -19,6 +19,5 @@ namespace Z1.Match.Models
         public bool IsPartial { get; set; }
         public bool IsActive { get; set; }
         public ICollection<Message> Messages { get; } = new List<Message>();
-
     }
 }

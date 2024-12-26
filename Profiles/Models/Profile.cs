@@ -1,10 +1,11 @@
 ﻿using NetTopologySuite.Geometries;
 using Z1.Auth.Models;
+using Z1.Core.Data;
 
 namespace Z1.Profiles.Models
 {
 
-    public class Profile
+    public class Profile : AuditableEntity
     {
         public int Id { get; set; }
         public int UserId { get; set; }

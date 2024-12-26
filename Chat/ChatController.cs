@@ -52,7 +52,16 @@ namespace Z1.Chat
         [HttpPost("mark-read/{messageId}")]
         public IActionResult MarkAsRead(long messageId)
         {
-            var messages = _chatService.MarkAsReadAsync(messageId);
+            var user = (User)HttpContext.Items["User"];
+            var messages = _chatService.MarkAsReadAsync(user, messageId);
+            return Ok(messages);
+        }
+
+        [HttpPost("delete-history/{matchId}/{lastMessageId}")]
+        public IActionResult DeleteHistory([FromRoute]int matchId,[FromRoute]int lastMessageId)
+        {
+            var user = (User)HttpContext.Items["User"];
+            var messages = _chatService.DeleteHistory(user, matchId, lastMessageId);
             return Ok(messages);
         }
     }

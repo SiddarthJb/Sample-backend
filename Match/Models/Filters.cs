@@ -1,8 +1,9 @@
 ﻿using Z1.Auth.Models;
+using Z1.Core.Data;
 
 namespace Z1.Match.Models
 {
-    public class Filter
+    public class Filter : AuditableEntity
     {
         public int Id { get; set; }
         public int UserId { get; set; }

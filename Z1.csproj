@@ -33,8 +33,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Auth\Facebook\" />
     <Folder Include="Match\Hubs\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.qa.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

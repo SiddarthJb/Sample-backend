@@ -15,4 +15,9 @@
         public string? Bio {  get; set; }
         public string? Work { get; set; }
     }
+
+    public class BulkImageUploadDTO
+    {
+        public IList<IFormFile> Images { get; set; }
+    }
 }

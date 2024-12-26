@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Reflection;
+using System.Security.Claims;
 using Z1.Auth.Models;
 using Z1.Chat.Models;
 using Z1.Match.Models;
@@ -23,10 +24,12 @@ namespace Z1.Core.Data
         public DbSet<Profile> Profiles { get; set; }
         public DbSet<Image> Images { get; set; }
         public DbSet<Interests> Interests { get; set; }
+
         //Filters and Match Queue
         public DbSet<Filter> Filters { get; set; }
         public DbSet<Languages> Languages { get; set; }
         public DbSet<MatchQueue> MatchQueue { get; set; }
+
         public DbSet<ShowMeFilter> ShowMeFilters { get; set; }
         public DbSet<RelationshipTypeFilter> RelationshipTypeFilters { get; set; }
         public DbSet<SmokeFilter> SmokeFilters { get; set; }
@@ -36,9 +39,10 @@ namespace Z1.Core.Data
         public DbSet<ReligionFilter> ReligionFilters { get; set; }
         public DbSet<EducationFilter> EducationFilters { get; set; }
         public DbSet<ZodiacFilter> ZodiacFilters { get; set; }
-        public DbSet<ProfessionFilter> ProfessionFilters { get; set; }
+        public DbSet<ProfessionFilter> ProfessionFilters { get; set; } 
         public DbSet<LanguagesFilter> LanguageFilters { get; set; }
         public DbSet<InterestsFilter> InterestFilters { get; set; }
+
         public DbSet<Matches> Matches { get; set; }
 
         //Chat
@@ -48,12 +52,6 @@ namespace Z1.Core.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            //modelBuilder.Entity<User>()
-            //    .HasOne(e => e.Profile)
-            //    .WithOne(e => e.User)
-            //    .HasForeignKey<Profile>(e => e.UserId)
-            //    .IsRequired();
 
             modelBuilder.Entity<Filter>()
                 .HasOne(fp => fp.User)
@@ -65,11 +63,19 @@ namespace Z1.Core.Data
                 .Property(s => s.Location)
                 .HasColumnType("geography");
 
-            //modelBuilder.Entity<MatchQueue>()
-            //    .HasOne(fp => fp.User)
-            //    .WithMany()
-            //    .HasForeignKey(fp => fp.UserId)
-            //    .OnDelete(DeleteBehavior.Cascade);
+            // Configure the foreign key for User1Id to cascade delete
+            modelBuilder.Entity<Matches>()
+                .HasOne(m => m.User1)
+                .WithMany()
+                .HasForeignKey(m => m.User1Id)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure the foreign key for User2Id to cascade delete
+            modelBuilder.Entity<Matches>()
+                .HasOne(m => m.User2) 
+                .WithMany()
+                .HasForeignKey(m => m.User2Id)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }
@@ -92,7 +98,7 @@ namespace Z1.Core.Data
                 if (entityEntry.State == EntityState.Added)
                 {
                     ((AuditableEntity)entityEntry.Entity).CreatedAt = DateTime.UtcNow;
-                    ((AuditableEntity)entityEntry.Entity).CreatedBy = httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "MyApp";
+                    ((AuditableEntity)entityEntry.Entity).CreatedBy = Convert.ToInt32(httpContextAccessor?.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 }
                 else
                 {
@@ -106,7 +112,7 @@ namespace Z1.Core.Data
                 // In any case we always want to set the properties
                 // ModifiedAt and ModifiedBy
                 ((AuditableEntity)entityEntry.Entity).ModifiedAt = DateTime.UtcNow;
-                ((AuditableEntity)entityEntry.Entity).ModifiedBy = httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "MyApp";
+                ((AuditableEntity)entityEntry.Entity).ModifiedBy = Convert.ToInt32(httpContextAccessor?.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             }
 
             // After we set all the needed properties
@@ -133,7 +139,7 @@ namespace Z1.Core.Data
                 if (entityEntry.State == EntityState.Added)
                 {
                     ((AuditableEntity)entityEntry.Entity).CreatedAt = DateTime.UtcNow;
-                    ((AuditableEntity)entityEntry.Entity).CreatedBy = httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "MyApp";
+                    ((AuditableEntity)entityEntry.Entity).CreatedBy = Convert.ToInt32(httpContextAccessor?.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 }
                 else
                 {
@@ -147,7 +153,7 @@ namespace Z1.Core.Data
                 // In any case we always want to set the properties
                 // ModifiedAt and ModifiedBy
                 ((AuditableEntity)entityEntry.Entity).ModifiedAt = DateTime.UtcNow;
-                ((AuditableEntity)entityEntry.Entity).ModifiedBy = httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "MyApp";
+                ((AuditableEntity)entityEntry.Entity).ModifiedBy = Convert.ToInt32(httpContextAccessor?.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             }
 
             // After we set all the needed properties

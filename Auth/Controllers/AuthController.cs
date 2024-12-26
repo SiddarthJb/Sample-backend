@@ -42,10 +42,9 @@ namespace Z1.Auth.Controllers
 
         [AllowAnonymous]
         [HttpPost("refresh-token")]
-        public IActionResult RefreshToken(RefreshRequestDto model)
+        public async Task<IActionResult> RefreshToken(RefreshRequestDto model)
         {
-            var response = _authService.RefreshToken(model.Refresh, ipAddress());
-            return Ok(response);
+            return Ok(await _authService.RefreshToken(model.Refresh, ipAddress()));
         }
 
         [HttpPost("revoke-token")]

@@ -669,7 +669,7 @@ namespace Z1.Match
             && x.User1Liked == false
             && x.User2Liked == false
             && x.IsActive
-            && x.CreatedAt.AddDays(1) < DateTime.Now);
+            && x.CreatedAt.AddDays(1) < DateTime.UtcNow);
 
             if (partialChats.Count() > 0) {
                 foreach (var chat in partialChats) {
@@ -695,7 +695,7 @@ namespace Z1.Match
 
             var existingMatchCount = _context.Matches.Where(x => x.CreatedAt.Date == DateTime.UtcNow.Date && (x.User1Id.ToString() == userId || x.User2Id.ToString() == userId)).Count();
 
-            if(!user.Subscribed && existingMatchCount >= _generalSettings.FreePerDayMatchLimit)
+            if(!user.IsSubscribed && existingMatchCount >= _generalSettings.FreePerDayMatchLimit)
             {
                 return "DailyLimitReached";
             };
@@ -718,6 +718,25 @@ namespace Z1.Match
             }
 
             return "AlreadyInQueue";    
+        }
+
+        public async Task<BaseResponse<bool>> Unmatch(User user, int matchId)
+        {
+            BaseResponse<bool> response = new();
+
+            var match = await _context.Matches.FirstOrDefaultAsync(x => x.Id == matchId && x.IsActive == true && (x.User1Id == user.Id || x.User2Id == user.Id));
+
+            if (match != null)
+            {
+                match.IsActive = false;
+
+                await _context.SaveChangesAsync();
+
+                response.Data = false;
+            }
+
+            return response;
+
         }
 
         //helper
@@ -998,5 +1017,6 @@ namespace Z1.Match
 
             return points;
         }
+
     }
 }

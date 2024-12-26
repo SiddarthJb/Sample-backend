@@ -3,7 +3,7 @@ using Z1.Auth.Models;
 using Z1.Match.Dtos;
 using Z1.Match.Interfaces;
 
-namespace Z1.Match.Controllers
+namespace Z1.Match
 {
     [Route("[controller]")]
     [ApiController]
@@ -42,6 +42,13 @@ namespace Z1.Match.Controllers
         {
             var user = (User)HttpContext.Items["User"];
             return Ok(await _matchService.Skip(user, partialUserId));
+        }
+
+        [HttpPost("unmatch/{matchId}/")]
+        public async Task<IActionResult> Unmatch(int matchId)
+        {
+            var user = (User)HttpContext.Items["User"];
+            return Ok(await _matchService.Unmatch(user, matchId));
         }
     }
 }

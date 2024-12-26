@@ -29,7 +29,7 @@ namespace Z1
             };
 
             await Clients.Caller.SendAsync("Matcher", matcher);
-            await Clients.All.SendAsync("MatcherCount", _matchService.GetMatchQueueCount());
+            await Clients.All.SendAsync("MatchQueueCount", _matchService.GetMatchQueueCount());
         }
 
         public async Task SendMessage(NewMessage message)

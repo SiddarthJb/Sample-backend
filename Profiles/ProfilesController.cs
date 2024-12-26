@@ -43,14 +43,26 @@ namespace Z1.Auth.Controllers
             return Ok(await _profileService.CreateProfile(model, user));
         }
 
-        [HttpPost("update-images/")]
-        public async Task<IActionResult> UpdateImages([FromForm] IFormFile image)
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadImage([FromForm] IFormFile image)
         {
             if (image == null)
                 return BadRequest("Images are required.");
 
             var user = (User)HttpContext.Items["User"];
-            return Ok(await _profileService.UpdateImages(image, user));
+            return Ok(await _profileService.UploadImage(image, user));
+        }
+
+        [HttpPost("upload-bulk-images")]
+        public async Task<IActionResult> UploadBulkImages([FromForm] BulkImageUploadDTO model)
+        {
+            if (model.Images == null || model.Images.Count == 0)
+            {
+                return BadRequest("No files uploaded.");
+            }
+
+            var user = (User)HttpContext.Items["User"];
+            return Ok(await _profileService.UploadBulkImages(model, user));
         }
 
         [HttpPatch("update/")]

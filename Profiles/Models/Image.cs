@@ -9,7 +9,7 @@ namespace Z1.Profiles.Models
         public required Profile Profile { get; set; }
         public required string ImageUrl { get; set; }
         public int Order { get; set; }
-        public bool IsBlurred { get; set; } = false;
+        public bool IsBlurred { get; set; } =  false;
         public bool IsSmall { get; set; } = false;
         public bool IsActive { get; set; } = true;
     }

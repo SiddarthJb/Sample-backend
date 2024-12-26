@@ -5,25 +5,35 @@
 namespace Z1.Migrations
 {
     /// <inheritdoc />
-    public partial class subscribed : Migration
+    public partial class keys : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
+            migrationBuilder.RenameColumn(
                 name: "Subscribed",
                 table: "AspNetUsers",
-                type: "bit",
+                newName: "IsSubscribed");
+
+            migrationBuilder.AddColumn<int>(
+                name: "Keys",
+                table: "AspNetUsers",
+                type: "int",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: 0);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "Subscribed",
+                name: "Keys",
                 table: "AspNetUsers");
+
+            migrationBuilder.RenameColumn(
+                name: "IsSubscribed",
+                table: "AspNetUsers",
+                newName: "Subscribed");
         }
     }
 }

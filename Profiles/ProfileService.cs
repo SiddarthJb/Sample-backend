@@ -187,7 +187,7 @@ namespace Z1.Profiles
             return response;
         }
 
-        public async Task<BaseResponse<PartialChatProfileDto>> GetPartialChatProfileAsync(int matchId, User user)
+        public async Task<BaseResponse<ProfileDto>> GetPartialChatProfileAsync(int matchId, User user)
         {
             var match = await _context.Matches.FindAsync(matchId);
 
@@ -204,7 +204,7 @@ namespace Z1.Profiles
                             .Include(x => x.Images)
                             .First(x => x.UserId == matchUserId);
 
-            var partialProfile = new PartialChatProfileDto()
+            var partialProfile = new ProfileDto()
             {
                 ImageUrl = _blobService.GenerateSasToken(profile.Images.First().ImageUrl),
                 Age = profile.Age,
@@ -221,7 +221,7 @@ namespace Z1.Profiles
                 Interests = profile.Interests.Select(x => x.Interest).ToList(),
             };
 
-            var response = new BaseResponse<PartialChatProfileDto>();
+            var response = new BaseResponse<ProfileDto>();
             response.Data = partialProfile;
             return response;
         }
@@ -235,51 +235,57 @@ namespace Z1.Profiles
                 throw new NotFoundException("MatchId not found");
             }
 
-            if ((match.IsPartial && (match.User1Id == user.Id ? match.User1Liked == true : match.User2Liked == true)) || match.IsPartial == false)
+            var matchUserId = match.User1Id == user.Id ? match.User2Id : match.User1Id;
+            var matchUserLiked = match.User1Id == user.Id ? match.User2Liked : match.User1Liked;
+
+            var profile = _context.Profiles
+                            .Include(x => x.Languages)
+                            .Include(x => x.Interests)
+                            .Include(x => x.Images)
+                            .First(x => x.UserId == matchUserId);
+
+
+            var profileImageurl = _blobService.GenerateSasToken(profile.Images.First().ImageUrl);
+            List<ImagesDto> images = new List<ImagesDto>();
+
+            images.Add(new ImagesDto() { Image = profileImageurl, Order = 1 });
+
+            var matchProfile = new ProfileDto()
             {
-                var matchUserId = match.User1Id == user.Id ? match.User2Id : match.User1Id;
-                var profile = _context.Profiles
-                                .Include(x => x.Languages)
-                                .Include(x => x.Interests)
-                                .Include(x => x.Images)
-                                .First(x => x.UserId == matchUserId);
+                Age = profile.Age,
+                Height = profile.Height,
+                Gender = ((Gender)profile.Gender).ToString(),
+                MaritalStatus = ((MaritalStatus)profile.MaritalStatus).ToString(),
+                Education = ((Education)profile.Education).ToString(),
+                Kids = ((Kids)profile.Kids).ToString(),
+                Alcohol = ((Alcohol)profile.Alcohol).ToString(),
+                Smoke = ((Smoke)profile.Smoke).ToString(),
+                Religion = ((Religion)profile.Religion).ToString(),
+                Zodiac = ((Zodiac)profile.Zodiac).ToString(),
+                Languages = profile.Languages.Select(x => x.Language).ToList(),
+                Interests = profile.Interests.Select(x => x.Interest).ToList(),
+                Images = images,
+            };
 
-                var images = profile.Images.Where(x => x.IsActive && !x.IsBlurred)
-                    .Select(x => {
-                        var blobName = _blobService.GenerateSasToken(x.ImageUrl);
-                        return new ImagesDto { Image = blobName, Order = x.Order };
-                        })
-                    .ToList();
-
-                var partialProfile = new ProfileDto()
-                {
-                    Name = profile.Name,
-                    Age = profile.Age,
-                    Height = profile.Height,
-                    Gender = ((Gender)profile.Gender).ToString(),
-                    MaritalStatus = ((MaritalStatus)profile.MaritalStatus).ToString(),
-                    Education = ((Education)profile.Education).ToString(),
-                    Kids = ((Kids)profile.Kids).ToString(),
-                    Alcohol = ((Alcohol)profile.Alcohol).ToString(),
-                    Smoke = ((Smoke)profile.Smoke).ToString(),
-                    Religion = ((Religion)profile.Religion).ToString(),
-                    Profession = ((Profession)profile.Profession).ToString(),
-                    Zodiac = ((Zodiac)profile.Zodiac).ToString(),
-                    Images = images,
-                    Languages = profile.Languages.Select(x => x.Language).ToList(),
-                    Interests = profile.Interests.Select(x => x.Interest).ToList(),
-                    Bio = profile.Bio,
-                    Work = profile.Work,
-                };
-
-                var response = new BaseResponse<ProfileDto>();
-                response.Data = partialProfile;
-                return response;
-            }
-            else
+            if (matchUserLiked == true)
             {
-                throw new AppException("No access to full chat profile");
+                var allImages = profile.Images.Where(x => x.IsActive && !x.IsBlurred)
+                                            .Select(x => {
+                                                var blobName = _blobService.GenerateSasToken(x.ImageUrl);
+                                                return new ImagesDto { Image = blobName, Order = x.Order };
+                                            })
+                                            .ToList();
+
+                matchProfile.Name = profile.Name;
+                matchProfile.Bio = profile.Bio;
+                matchProfile.Work = profile.Work;
+                matchProfile.Profession = ((Profession)profile.Profession).ToString();
+                matchProfile.Images = allImages;
             }
+
+            var response = new BaseResponse<ProfileDto>();
+            response.Data = matchProfile;
+            return response;
         }
 
         public async Task<BaseResponse<ProfileDto>> GetProfileAsync(int userId, User user)
@@ -318,6 +324,8 @@ namespace Z1.Profiles
                 Images = images,
                 Languages = profile.Languages.Select(x => x.Language).ToList(),
                 Interests = profile.Interests.Select(x => x.Interest).ToList(),
+                Keys = user.Keys,
+                IsSubscribed = user.IsSubscribed
             };
 
             var response = new BaseResponse<ProfileDto>();
@@ -325,7 +333,7 @@ namespace Z1.Profiles
             return response;
         }
 
-        public async Task<BaseResponse<bool>> UpdateImages(IFormFile imgFile, User user)
+        public async Task<BaseResponse<bool>> UploadImage(IFormFile imgFile, User user)
         {
             var response = new BaseResponse<bool>();
 
@@ -347,6 +355,46 @@ namespace Z1.Profiles
                     profile.Images.Add(newImage);
                 }
                 
+                await _context.SaveChangesAsync();
+                response.Data = true;
+            }
+            catch (Exception ex)
+            {
+                response.Data = false;
+                response.Status = (int)HttpStatusCode.InternalServerError;
+            }
+
+            return response;
+
+        }
+
+        public async Task<BaseResponse<bool>> UploadBulkImages(BulkImageUploadDTO model, User user)
+        {
+            var response = new BaseResponse<bool>();
+
+            try
+            {
+                var profile = _context.Profiles.First(x => x.UserId == user.Id && x.IsActive);
+
+                int imageCount = 0;
+                foreach (var image in model.Images) {
+
+                    using (var stream = image.OpenReadStream())
+                    {
+                        var fileId = await _blobService.UploadAsync(stream);
+                        var newImage = new Image
+                        {
+                            ProfileId = profile.Id,
+                            Profile = profile,
+                            ImageUrl = fileId + ".jpg",
+                            Order = imageCount,
+                        };
+                        profile.Images.Add(newImage);
+                    }
+
+                    imageCount++;
+                }
+
                 await _context.SaveChangesAsync();
                 response.Data = true;
             }

@@ -9,8 +9,9 @@
 
     public enum UserState
     {
-        ExistingUser = 1,
-        PhoneVerification,
-        ProfileCreation
+        PhoneVerification = 1,
+        UserVerification,
+        ProfileCreation,
+        ExistingUser,
     }
 }

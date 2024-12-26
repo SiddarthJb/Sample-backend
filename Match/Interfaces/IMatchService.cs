@@ -12,6 +12,7 @@ namespace Z1.Match.Interfaces
         Task<bool> Search();
         Task<BaseResponse<bool>> Like(User user, int likeUserId);
         Task<BaseResponse<bool>> Skip(User user, int partialUserId);
+        Task<BaseResponse<bool>> Unmatch(User user, int matchId);
         Task<bool> PartialChatCleaner();
         public int GetMatchQueueCount();
     }
