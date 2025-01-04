@@ -47,7 +47,7 @@ namespace Z1.Chat
         {
             var matches = _context.Matches
                  .Where(x => (x.User1Id == user.Id || x.User2Id == user.Id) 
-                 && x.IsActive == true && ((x.IsPartial && x.CreatedAt.AddDays(1) < DateTime.UtcNow) || !x.IsPartial))
+                 && x.IsActive == true && ((x.IsPartial && x.CreatedAt.AddDays(1) > DateTime.UtcNow) || !x.IsPartial))
                  .Include(x => x.Messages).ToList();
 
             var result = new List<ChatListItem>();

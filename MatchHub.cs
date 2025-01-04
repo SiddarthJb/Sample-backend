@@ -62,6 +62,7 @@ namespace Z1
 
         public class MatchResponse {
             public string Status { get; set; }
+            public int MatchId { get; set; }
         }
         
     }

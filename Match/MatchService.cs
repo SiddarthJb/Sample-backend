@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using Z1.Auth.Models;
+using Z1.Chat.Models;
 using Z1.Core;
 using Z1.Core.Data;
 using Z1.Core.Interfaces;
@@ -540,7 +541,7 @@ namespace Z1.Match
                             IsActive = true,
                         };
 
-                        await _context.Matches.AddAsync(match);
+                        var partialMatch = await _context.Matches.AddAsync(match);
 
                         _context.MatchQueue.Remove(user);
                         _context.MatchQueue.Remove(matchUser.Value);
@@ -549,6 +550,7 @@ namespace Z1.Match
                         var matchRes = new MatchResponse()
                         {
                             Status = "MatchFound",
+                            MatchId = match.Id,
                         };
 
                         await _hubContext.Clients.User(user.UserId.ToString()).SendAsync("Matcher", matchRes);
@@ -588,7 +590,7 @@ namespace Z1.Match
                     {
                         var matchRes = new MatchResponse()
                         {
-                            Status = "Match",
+                            Status = "Matched",
                         };
 
                         currentMatch.IsPartial = false;
@@ -602,7 +604,7 @@ namespace Z1.Match
                     {
                         currentMatch.User1Liked = true;
                         currentMatch.User1LikedTime = DateTime.UtcNow;
-                        await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("UserLiked", user.Id);
+                        await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("Liked", user.Id);
                         response.Data = true;
                     }
                 }
@@ -612,7 +614,7 @@ namespace Z1.Match
                     {
                         var matchRes = new MatchResponse()
                         {
-                            Status = "Match",
+                            Status = "Matched",
                         };
 
                         currentMatch.IsPartial = false;
@@ -626,7 +628,7 @@ namespace Z1.Match
                     {
                         currentMatch.User2Liked = true;
                         currentMatch.User2LikedTime = DateTime.UtcNow;
-                        await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("UserLiked");
+                        await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("Liked");
                         response.Data = true;
                     }
                 }
@@ -646,13 +648,8 @@ namespace Z1.Match
                 currentMatch.IsActive = false;
                 await _context.SaveChangesAsync();
 
-                var matchRes = new MatchResponse()
-                {
-                    Status = "Skip",
-                };
-
-                await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("Matcher", matchRes);
-                await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("Matcher", matchRes);
+                await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("Skipped");
+                await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("Skipped");
                 response.Data = true;
             }
             else
@@ -726,7 +723,7 @@ namespace Z1.Match
 
             var match = await _context.Matches.FirstOrDefaultAsync(x => x.Id == matchId && x.IsActive == true && (x.User1Id == user.Id || x.User2Id == user.Id));
 
-            if (match != null)
+            if (match != null && (match.User1Id == user.Id || match.User2Id == user.Id))
             {
                 match.IsActive = false;
 
