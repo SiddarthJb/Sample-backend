@@ -598,6 +598,8 @@ namespace Z1.Match
                         currentMatch.User1LikedTime = DateTime.UtcNow;
                         await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("Matcher", matchRes);
                         await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("Matcher", matchRes);
+                        await _hubContext.Clients.All.SendAsync("MatchQueueCount", GetMatchQueueCount());
+
                         response.Data = true;
                     }
                     else
@@ -622,6 +624,8 @@ namespace Z1.Match
                         currentMatch.User2LikedTime = DateTime.UtcNow;
                         await _hubContext.Clients.User(currentMatch.User2Id.ToString()).SendAsync("Matcher", matchRes);
                         await _hubContext.Clients.User(currentMatch.User1Id.ToString()).SendAsync("Matcher", matchRes);
+                        await _hubContext.Clients.All.SendAsync("MatchQueueCount", GetMatchQueueCount());
+
                         response.Data = true;
                     }
                     else
@@ -717,6 +721,21 @@ namespace Z1.Match
             return "AlreadyInQueue";    
         }
 
+        public async Task<string> StopMatching(string userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id.ToString() == userId);
+
+            var matchQueueObj = _context.MatchQueue.FirstOrDefault(x => x.UserId.ToString() == userId);
+            
+            if (matchQueueObj != null)
+            {
+                _context.MatchQueue.Remove(matchQueueObj);
+                await _context.SaveChangesAsync();
+            }
+
+            return "Cancelled";
+        }
+
         public async Task<BaseResponse<bool>> Unmatch(User user, int matchId)
         {
             BaseResponse<bool> response = new();
@@ -734,6 +753,11 @@ namespace Z1.Match
 
             return response;
 
+        }
+
+        public Task<BaseResponse<bool>> BlockAndReport(User user, BlockAndReportDto model)
+        {
+            throw new NotImplementedException();
         }
 
         //helper

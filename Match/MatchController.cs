@@ -50,5 +50,12 @@ namespace Z1.Match
             var user = (User)HttpContext.Items["User"];
             return Ok(await _matchService.Unmatch(user, matchId));
         }
+
+        [HttpPost("blockAndReport/")]
+        public async Task<IActionResult> BlockAndReport(BlockAndReportDto model)
+        {
+            var user = (User)HttpContext.Items["User"];
+            return Ok(await _matchService.BlockAndReport(user, model));
+        }
     }
 }

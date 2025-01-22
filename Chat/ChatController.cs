@@ -53,7 +53,7 @@ namespace Z1.Chat
         public IActionResult MarkAsRead(long messageId)
         {
             var user = (User)HttpContext.Items["User"];
-            var messages = _chatService.MarkAsReadAsync(user, messageId);
+            var messages = _chatService.MarkAsRead(user, messageId);
             return Ok(messages);
         }
 

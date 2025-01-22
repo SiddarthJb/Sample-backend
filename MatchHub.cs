@@ -32,6 +32,18 @@ namespace Z1
             await Clients.All.SendAsync("MatchQueueCount", _matchService.GetMatchQueueCount());
         }
 
+        public async Task StopMatching(string userId)
+        {
+            var status = await _matchService.StopMatching(userId);
+            var matcher = new MatchResponse()
+            {
+                Status = status,
+            };
+
+            await Clients.Caller.SendAsync("Matcher", matcher);
+            await Clients.All.SendAsync("MatchQueueCount", _matchService.GetMatchQueueCount());
+        }
+
         public async Task SendMessage(NewMessage message)
         {
             var newMessage = new Message

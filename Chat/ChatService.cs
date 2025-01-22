@@ -72,7 +72,7 @@ namespace Z1.Chat
                 chatListItem.MatchId = match.Id;
                 chatListItem.CreatedAt = match.CreatedAt;
                 chatListItem.IsPartial = match.IsPartial;
-                chatListItem.Messages = await _context.Messages.Select(x => new MessageDto
+                chatListItem.Messages = await _context.Messages.Where(x => x.DeleteFor1 != user.Id && x.DeleteFor2 != user.Id).Select(x => new MessageDto
                 {
                     Id = x.Id,
                     Text = x.Text,
@@ -200,7 +200,7 @@ namespace Z1.Chat
             return response;
         }
 
-        public async Task<BaseResponse<bool>> MarkAsReadAsync(User user , long messageId)
+        public BaseResponse<bool> MarkAsRead (User user , long messageId)
         {
             var response = new BaseResponse<bool>();
 
@@ -213,7 +213,7 @@ namespace Z1.Chat
                     var messages = _context.Messages.Where(x => x.MatchId == lstMessage.MatchId && x.Timestamp <= lstMessage.Timestamp && (x.SeenBy1 != user.Id && x.SeenBy2 != user.Id)).ToList();
                     foreach (var message in messages)
                     {
-                        if (message.SeenBy1 != null) { 
+                        if (message.SeenBy1 == null) { 
                             message.SeenBy1 = user.Id;
                         }
                         else
@@ -241,7 +241,7 @@ namespace Z1.Chat
         {
             BaseResponse<bool> response = new();
 
-            var chatHistory = _context.Messages.Where(x => x.MatchId == matchId && x.IsActive && x.Id < lastMessageId);
+            var chatHistory = _context.Messages.Where(x => x.MatchId == matchId && x.IsActive && x.Id <= lastMessageId);
 
             if (chatHistory.Count() > 0)
             {
